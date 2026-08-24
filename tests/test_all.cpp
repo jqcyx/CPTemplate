@@ -145,7 +145,13 @@ int main() {
         int r = rd::randint(1, 10);
         assert(r >= 1 && r <= 10);
     }
-
+    {
+        vector<int>g={0,1,2,5,4,3};
+        ST<int, lazy_op, lazy_e>p(g);
+        int res1=p.prod(1,3);
+        int res2=p.prod(4,5);
+        assert(res1==5&&res2==4);
+    }
     std::cout << "[CI] All components instantiated and passed tests!" << std::endl;
     return 0;
 }

@@ -116,7 +116,7 @@ template<int id>struct dynamic_modint{
 };
 template<int id>barrett dynamic_modint<id>::bt=998244353;
 template<class S,S(*op)(S,S),S(*e)()>struct segtree{
-	segtree():segtree(0){}
+	segtree()=delete;
 	explicit segtree(int n):_n(n){log=math::ceilpow2(_n);size=1<<log;d=vector<S>(2*size,e());}
 	explicit segtree(const vector<S>&v):_n(static_cast<int>(v.size())-1){log=math::ceilpow2(_n);size=1<<log;d.resize(2*size);if(_n>0){copy(v.begin()+1,v.end(),d.begin()+size);fill(d.begin()+size+_n,d.end(),e());for(int i=size-1;i>=1;i--)update(i);}else fill(d.begin(),d.end(),e());}
 	void set(int p,const S& x){p=p+size-1;d[p]=x;for(int i=1;i<=log;i++)update(p>>i);}
@@ -133,7 +133,7 @@ template<class S,S(*op)(S,S),S(*e)()>struct segtree{
 		void update(int k){d[k]=op(d[2*k],d[2*k+1]);}
 };
 template<class S,S(*op)(S,S),S(*e)(),class F,S(*mapping)(F,S),F(*composition)(F,F),F(*id)()>struct lazy_segtree{
-	lazy_segtree():lazy_segtree(0){}
+	lazy_segtree()=delete;
 	explicit lazy_segtree(int n):_n(n){log=math::ceilpow2(_n);size=1<<log;d=vector<S>(2*size,e());lz=vector<F>(size,id());}
 	explicit lazy_segtree(const vector<S>& v):_n(static_cast<int>(v.size())-1){log=math::ceilpow2(_n);size=1<<log;d.resize(2*size);lz=vector<F>(size,id());if(_n>0){copy(v.begin()+1,v.end(),d.begin()+size);fill(d.begin()+size+_n,d.end(),e());for(int i=size-1;i>=1;i--)update(i);}else fill(d.begin(), d.end(), e());}
 	void set(int p,const S& x){p=p+size-1;for(int i=log;i>=1;i--)push(p>>i);d[p]=x;for(int i=1;i<=log;i++)update(p>>i);}
@@ -145,7 +145,7 @@ template<class S,S(*op)(S,S),S(*e)(),class F,S(*mapping)(F,S),F(*composition)(F,
 	template<bool(*f)(const S&)>int max_right(int l){return max_right(l,[](const S& x){return f(x);});}
 	template<class G>int max_right(int l,G g){if(l>_n)return _n;int cur=l+size-1;for(int i=log;i>=1;i--)push(cur>>i);S sm=e();do{while((cur&1)==0)cur>>=1;if(!g(op(sm,d[cur]))){while(cur<size){push(cur);cur=(2*cur);if(g(op(sm,d[cur]))){sm=op(sm,d[cur]);cur++;}}return cur-size;}sm=op(sm,d[cur]);cur++;}while(cur&(cur-1));return _n;}
 	template<bool(*f)(const S&)>int min_left(int r){return min_left(r,[](const S& x){return f(x);});}
-	template<class G> int min_left(int r, G g) {if(r<1)return 1;int cur=r+size-1;for(int i=log;i>=1;i--)push(cur>>i);S sm=e();do{while(cur>1&&(cur&1))cur>>=1;if(!g(op(d[cur],sm))){while(cur<size){push(cur);cur=(2*cur+1);if(g(op(d[cur],sm))){sm=op(d[cur],sm);cur--;}}return cur-size+2;}sm=op(d[cur],sm);if((cur&-cur)==cur)break;cur--;}while(1);return 1;}
+	template<class G> int min_left(int r,G g){if(r<1)return 1;int cur=r+size-1;for(int i=log;i>=1;i--)push(cur>>i);S sm=e();do{while(cur>1&&(cur&1))cur>>=1;if(!g(op(d[cur],sm))){while(cur<size){push(cur);cur=(2*cur+1);if(g(op(d[cur],sm))){sm=op(d[cur],sm);cur--;}}return cur-size+2;}sm=op(d[cur],sm);if((cur&-cur)==cur)break;cur--;}while(1);return 1;}
 	private:
 		int _n,size,log;
 		vector<S> d;
@@ -187,7 +187,7 @@ namespace str{
 };
 template<class T>struct Matrix{
 	ui n,m;
-	vector<T> data;
+	vector<T>data;
 	Matrix()=delete;
 	Matrix(ui n,ui m):n(n),m(m),data(n*m,T()){}
 	static Matrix I(ui s){Matrix r(s,s);for(ui i=1;i<=s;++i)r[i][i]=T(1);return r;}
@@ -200,6 +200,13 @@ template<class T>struct Matrix{
 	Matrix operator-(const Matrix& o)const{Matrix r(n,m);for(ui i=0;i<n*m;++i)r.data[i]=data[i]-o.data[i];return r;}
 	Matrix operator*(const Matrix& o)const{Matrix r(n,o.m);for(ui i=1;i<=n;++i)for(ui k=1;k<=m;++k){T v=(*this)[i][k];if(v!=T())for(ui j=1;j<=o.m;++j)r[i][j]+=v*o[k][j];}return r;}
 	Matrix operator^(ull p)const{Matrix r=I(n),b=*this;for(;p;p>>=1,b=b*b)if(p&1)r=r*b;return r;}
+};
+template<class S,S(*op)(S,S),S(*e)()>struct ST{
+	ST()=delete;
+	int n,W;
+	vector<S>d;
+	ST(vector<S>a){if((n=a.size()-1)<=0)return;W=n+1;int K=__lg(n);d.resize((K+1)*W);copy(a.begin()+1,a.end(),d.begin()+1);for(int i=1;i<=K;++i){const S*p=d.data()+(i-1)*W;S*c=d.data()+i*W;for(int j=1,h=1<<(i-1),lim=n-(1<<i)+1;j<=lim;++j)c[j]=op(p[j],p[j+h]);}}
+	inline S prod(int l,int r)const{if(__builtin_expect(l>r,0))return e();int k=__lg(r-l+1);const S*p=d.data()+k*W;return op(p[l],p[r-(1<<k)+1]);}
 };
 int main(){
 	
