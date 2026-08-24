@@ -1,0 +1,25 @@
+name: Compile Test
+on:
+  push:
+    branches: [ "main", "master" ]
+  pull_request:
+    branches: [ "main", "master" ]
+  workflow_dispatch:
+
+jobs:
+  test-standards:
+    name: Test with g++ (${{ matrix.std }})
+    runs-on: ubuntu-24.04
+    strategy:
+      fail-fast: false
+      matrix:
+        std: ['c++14', 'c++17', 'c++20', 'c++23']
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+      - name: Print Compiler Version
+        run: g++ --version
+      - name: Compile and Run Tests (${{ matrix.std }})
+        run: |
+          g++ -std=${{ matrix.std }} -O2 -Wall -Wextra tests/test_all.cpp -o test_runner
+          ./test_runner
