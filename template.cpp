@@ -200,6 +200,12 @@ template<class T>struct Matrix{
 	Matrix operator-(const Matrix& o)const{Matrix r(n,m);for(ui i=0;i<n*m;++i)r.data[i]=data[i]-o.data[i];return r;}
 	Matrix operator*(const Matrix& o)const{Matrix r(n,o.m);for(ui i=1;i<=n;++i)for(ui k=1;k<=m;++k){T v=(*this)[i][k];if(v!=T())for(ui j=1;j<=o.m;++j)r[i][j]+=v*o[k][j];}return r;}
 	Matrix operator^(ull p)const{Matrix r=I(n),b=*this;for(;p;p>>=1,b=b*b)if(p&1)r=r*b;return r;}
+	static inline T _inv(const T& x){if constexpr(is_floating_point_v<T>)return T(1)/x;else if constexpr(requires{x.inv();})return x.inv();else return T(1)/x;}
+	pair<int,T> gauss(Matrix* B=nullptr){ui r=1;T d=1;for(ui c=1;c<=m&&r<=n;++c){ui p=r;if constexpr(is_floating_point_v<T>){for(ui i=r+1;i<=n;++i)if(abs((*this)[i][c])>abs((*this)[p][c]))p=i;if(abs((*this)[p][c])<1e-9){d=0;continue;}}else{for(ui i=r;i<=n;++i)if((*this)[i][c]!=T()){p=i;break;}if((*this)[p][c]==T()){d=0;continue;}}if(p!=r){d=-d;for(ui j=1;j<=m;++j)swap((*this)[r][j],(*this)[p][j]);if(B)for(ui j=1;j<=B->m;++j)swap((*B)[r][j],(*B)[p][j]);}T iv=_inv((*this)[r][c]);d*=(*this)[r][c];for(ui j=c;j<=m;++j)(*this)[r][j]*=iv;if(B)for(ui j=1;j<=B->m;++j)(*B)[r][j]*=iv;for(ui i=1;i<=n;++i)if(i!=r&&(*this)[i][c]!=T()){T f=(*this)[i][c];for(ui j=c;j<=m;++j)(*this)[i][j]-=f*(*this)[r][j];if(B)for(ui j=1;j<=B->m;++j)(*B)[i][j]-=f*(*B)[r][j];}++r;}return {r-1,(r<=n&&n==m)?T(0):d};}
+	T det()const{Matrix a=*this;return a.gauss().sc;}
+	pair<bool,Matrix> inv()const{if(n!=m)return {0,Matrix(0,0)};Matrix a=*this,b=I(n);return {a.gauss(&b).fs==(int)n,b};}
+	pair<int,Matrix> solve(Matrix b)const{if(n!=b.n)return {-1,Matrix(0,0)};Matrix a=*this;auto [r,_]=a.gauss(&b);for(ui i=r+1;i<=n;++i)for(ui j=1;j<=b.m;++j)if(b[i][j]!=T())return {-1,Matrix(0,0)};Matrix x(m,b.m);for(ui i=1,p=1;i<=n&&p<=(ui)r;++i){ui c=1;while(c<=m&&a[i][c]==T())++c;if(c<=m){for(ui j=1;j<=b.m;++j)x[c][j]=b[i][j];++p;}}return {r,x};}
+	pair<int,vector<T>> solve(const vector<T>& b)const{if(n!=b.size())return {-1,{}};Matrix B(n,1);for(ui i=0;i<n;++i)B.data[i]=b[i];auto [r,X]=solve(B);if(r==-1)return {-1,{}};return {r,X.data};}
 };
 template<class S,S(*op)(S,S),S(*e)()>struct ST{
 	ST()=delete;
