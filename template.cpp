@@ -198,8 +198,14 @@ template<class T>struct Matrix{
 	CP operator[](ui r)const{return{data.data()+(r-1)*m};}
 	Matrix operator+(const Matrix& o)const{Matrix r(n,m);for(ui i=0;i<n*m;++i)r.data[i]=data[i]+o.data[i];return r;}
 	Matrix operator-(const Matrix& o)const{Matrix r(n,m);for(ui i=0;i<n*m;++i)r.data[i]=data[i]-o.data[i];return r;}
-	Matrix operator*(const Matrix& o)const{Matrix r(n,o.m);for(ui i=1;i<=n;++i)for(ui k=1;k<=m;++k){T v=(*this)[i][k];if(v!=T())for(ui j=1;j<=o.m;++j)r[i][j]+=v*o[k][j];}return r;}
+	Matrix operator*(const Matrix& o)const{Matrix r(n,o.m);for(ui i=1;i<=n;++i)for(ui k=1;k<=m;++k){T v=(*this)[i][k];if(!z(v))for(ui j=1;j<=o.m;++j)r[i][j]+=v*o[k][j];}return r;}
 	Matrix operator^(ull p)const{Matrix r=I(n),b=*this;for(;p;p>>=1,b=b*b)if(p&1)r=r*b;return r;}
+	static bool z(T x){if constexpr(is_floating_point<T>::value)return abs(x)<1e-9;return x==T();}
+	static bool cmp(T a,T b){if constexpr(is_floating_point<T>::value)return abs(a)>abs(b);return !z(a)&&z(b);}
+	int rref(ui lim=0){if(!lim)lim=m;ui r=1;for(ui c=1;c<=lim&&r<=n;++c){ui p=r;for(ui i=r+1;i<=n;++i)if(cmp((*this)[i][c],(*this)[p][c]))p=i;if(z((*this)[p][c]))continue;if(p!=r)for(ui j=1;j<=m;++j)swap((*this)[r][j],(*this)[p][j]);T inv=T(1)/(*this)[r][c];for(ui j=c;j<=m;++j)(*this)[r][j]*=inv;for(ui i=1;i<=n;++i)if(i!=r&&!z((*this)[i][c])){T f=(*this)[i][c];for(ui j=c;j<=m;++j)(*this)[i][j]-=f*(*this)[r][j];}++r;}return r-1;}
+	T det()const{Matrix a=*this;T res=1;for(ui i=1;i<=n;++i){ui p=i;for(ui j=i+1;j<=n;++j)if(cmp(a[j][i],a[p][i]))p=j;if(z(a[p][i]))return T();if(p!=i){for(ui j=1;j<=n;++j)swap(a[i][j],a[p][j]);res=-res;}res*=a[i][i];T inv=T(1)/a[i][i];for(ui j=i+1;j<=n;++j)if(!z(a[j][i])){T f=a[j][i]*inv;for(ui k=i;k<=n;++k)a[j][k]-=f*a[i][k];}}return res;}
+	pair<bool,Matrix>inv()const{Matrix a(n,2*n);for(ui i=1;i<=n;++i){for(ui j=1;j<=n;++j)a[i][j]=(*this)[i][j];a[i][n+i]=1;}if(a.rref(n)<n)return{0,Matrix(0,0)};Matrix r(n,n);for(ui i=1;i<=n;++i)for(ui j=1;j<=n;++j)r[i][j]=a[i][n+j];return{1,r};}
+	static int solve(Matrix A,vector<T>b,vector<T>&ans){Matrix a(A.n,A.m+1);for(ui i=1;i<=A.n;++i){for(ui j=1;j<=A.m;++j)a[i][j]=A[i][j];a[i][A.m+1]=b[i];}ui r=1;ans.assign(A.m+1,T());for(ui c=1;c<=A.m&&r<=A.n;++c){ui p=r;for(ui i=r+1;i<=A.n;++i)if(cmp(a[i][c],a[p][c]))p=i;if(z(a[p][c]))continue;if(p!=r)for(ui j=1;j<=A.m+1;++j)swap(a[r][j],a[p][j]);T inv=T(1)/a[r][c];for(ui j=c;j<=A.m+1;++j)a[r][j]*=inv;for(ui i=1;i<=A.n;++i)if(i!=r&&!z(a[i][c])){T f=a[i][c];for(ui j=c;j<=A.m+1;++j)a[i][j]-=f*a[r][j];}ans[c]=a[r][A.m+1];++r;}for(ui i=r;i<=A.n;++i)if(!z(a[i][A.m+1]))return -1;return r-1<A.m;}
 };
 template<class S,S(*op)(S,S),S(*e)()>struct ST{
 	ST()=delete;
