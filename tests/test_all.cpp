@@ -146,7 +146,7 @@ int main() {
         assert(r >= 1 && r <= 10);
     }
     {
-        vector<int>g={1,2,5,4,3};
+        vector<int>g={0,1,2,5,4,3};
         ST<int, lazy_op, lazy_e>p(g);
         int res1=p.prod(1,3);
         int res2=p.prod(4,5);
