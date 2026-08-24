@@ -3,17 +3,24 @@
 #include <iostream>
 
 // ----------------------------------------------------
-// 核心技巧：在引入前将模板中的 main 重命名，源文件无需任何改动！
+// 1. 压制源文件中未返回 0 和 freopen 的警告
+// 2. 将源文件中的 main 重命名，零修改源文件
 // ----------------------------------------------------
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wreturn-type"
+#pragma GCC diagnostic ignored "-Wunused-result"
 #define main unused_template_main
-#include "../template.cpp"  // 这里指向你的原模板文件名
+#include "../template.cpp"
 #undef main
+#pragma GCC diagnostic pop
 
-// ---------------- 线段树辅助函数 ----------------
+// ---------------- 线段树辅助函数（单点修改，区间和） ----------------
 int seg_op(int a, int b) { return a + b; }
 int seg_e() { return 0; }
 
-// ---------------- 延迟线段树辅助函数 ----------------
+// ---------------- 延迟线段树辅助函数（区间加，区间最大值） ----------------
+int lazy_op(int a, int b) { return std::max(a, b); }
+int lazy_e() { return -1e9; }
 int lazy_mapping(int f, int x) { return x + f; }
 int lazy_composition(int f, int g) { return f + g; }
 int lazy_id() { return 0; }
@@ -77,7 +84,7 @@ int main() {
         assert((a * b).val() == 1000000005);
     }
 
-    // 7. 单点修改区间查询线段树 segtree
+    // 7. 单点修改区间查询线段树 segtree (区间和)
     {
         segtree<int, seg_op, seg_e> seg(5);
         seg.set(1, 10);
@@ -86,12 +93,23 @@ int main() {
         assert(seg.all_prod() == 30);
     }
 
-    // 8. 区间修改区间查询线段树 lazy_segtree
+    // 8. 区间修改区间查询线段树 lazy_segtree (区间加，区间最大值)
     {
-        lazy_segtree<int, seg_op, seg_e, int, lazy_mapping, lazy_composition, lazy_id> lz(5);
-        lz.apply(1, 3, 5); // [1, 3] 区间 +5
-        assert(lz.prod(1, 2) == 10);
-        assert(lz.prod(1, 3) == 15);
+        // 初始全 0 的序列，长度为 5
+        vector<int> init_val(6, 0);
+        lazy_segtree<int, lazy_op, lazy_e, int, lazy_mapping, lazy_composition, lazy_id> lz(init_val);
+
+        // [1, 3] 区间 +5 => 序列变为: [5, 5, 5, 0, 0]
+        lz.apply(1, 3, 5);
+        assert(lz.prod(1, 2) == 5);
+        assert(lz.prod(4, 5) == 0);
+        assert(lz.prod(1, 5) == 5);
+
+        // [2, 4] 区间 +3 => 序列变为: [5, 8, 8, 3, 0]
+        lz.apply(2, 4, 3);
+        assert(lz.prod(1, 2) == 8);
+        assert(lz.prod(2, 3) == 8);
+        assert(lz.prod(4, 5) == 3);
     }
 
     // 9. 组合数 Comb_static / Comb_dynamic
