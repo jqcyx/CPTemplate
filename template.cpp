@@ -165,12 +165,20 @@ namespace rd{
 	mt19937 rand32(chrono::high_resolution_clock::now().time_since_epoch().count());
 	int randint(int l,int r){uniform_int_distribution<>dist(l,r);return dist(rand32);}
 }
-template<int id>struct Comb{
+template<const int M>struct Comb_static{
+	using mint=static_modint<M>;
+	vector<mint>fact,invfact;
+	int N=0,unex=0;
+	Comb_static()=delete;
+	Comb_static(int n,int _unex):N(n),unex(_unex){fact.resize(N+1),invfact.resize(N+1);fact[0]=fact[1]=invfact[0]=1;for(int i=2;i<=N;i++)fact[i]=fact[i-1]*i;invfact[N]=math::invmod(fact[N].val(),M);for(int i=N-1;i>=1;i--)invfact[i]=invfact[i+1]*(i+1);}
+	ll comb(ll m,ll n){if(n<0||n>m)return unex;if(n==0||n==m)return 1;return (fact[m]*invfact[n]*invfact[m-n]).val();}
+};
+template<int id>struct Comb_dynamic{
 	using mint=dynamic_modint<id>;
-	vector<mint> fact,invfact;
+	vector<mint>fact,invfact;
 	int N=0,M=0,unex=0;
-	Comb()=delete;
-	Comb(int n,int mod,int _unex):N(n),M(mod),unex(_unex){fact.resize(N+1),invfact.resize(N+1);mint::set_mod(M);fact[0]=fact[1]=invfact[0]=1;for(int i=2;i<=N;i++)fact[i]=fact[i-1]*i;invfact[N]=math::invmod(fact[N].val(),M);for(int i=N-1;i>=1;i--)invfact[i]=invfact[i+1]*(i+1);}
+	Comb_dynamic()=delete;
+	Comb_dynamic(int n,int mod,int _unex):N(n),M(mod),unex(_unex){fact.resize(N+1),invfact.resize(N+1);mint::set_mod(M);fact[0]=fact[1]=invfact[0]=1;for(int i=2;i<=N;i++)fact[i]=fact[i-1]*i;invfact[N]=math::invmod(fact[N].val(),M);for(int i=N-1;i>=1;i--)invfact[i]=invfact[i+1]*(i+1);}
 	ll comb(ll m,ll n){if(n<0||n>m)return unex;if(n==0||n==m)return 1;return (fact[m]*invfact[n]*invfact[m-n]).val();}
 };
 namespace str{
@@ -194,7 +202,7 @@ template<class T>struct Matrix{
     Matrix operator^(ull p)const{Matrix r=I(n),b=*this;for(;p;p>>=1,b=b*b)if(p&1)r=r*b;return r;}
 };
 int main(){
-
+	
 }
 /*
 
